@@ -322,12 +322,12 @@ bool log_qeuiptment_status(struct aqualinkdata *aq_data)
       pump_index = rsm_atoi(&_menu[2][12]); // Pump inxed is in different position on line `  ePump AC  4`
     // RPM displays differently depending on 3 or 4 digit rpm.
     if (rsm_strcmp(_menu[3],"RPM:") == 0){
-      rpm = rsm_atoi(&_menu[3][10]);
+      rpm = rsm_atoi(&_menu[3][9]);
       if (rsm_strcmp(_menu[4],"Watts:") == 0) {
-        watts = rsm_atoi(&_menu[4][10]);
+        watts = rsm_atoi(&_menu[4][9]);
       }
       if (rsm_strcmp(_menu[5],"GPM:") == 0) {
-        gpm = rsm_atoi(&_menu[5][10]);
+        gpm = rsm_atoi(&_menu[5][9]);
       }
     } else if (rsm_strcmp(_menu[3],"*** Priming ***") == 0){
       rpm = PUMP_PRIMING;

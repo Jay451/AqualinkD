@@ -121,7 +121,14 @@ typedef struct pumpd
 {
   int rpm;
   int gpm;
+  int psi;
   int watts;
+
+  int previous_rpm;
+  unsigned long watt_sum;
+  unsigned long gpm_sum;
+  unsigned long sample_count;
+
   unsigned char pumpID;
   int pumpIndex;
   pump_type pumpType;

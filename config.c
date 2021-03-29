@@ -601,12 +601,17 @@ bool setConfigValue(struct aqualinkdata *aqdata, char *param, char *value) {
       }
       rtn=true;
     } else if (strncasecmp(param + 9, "_pumpID", 7) == 0) {
+
+      LOG(AQUA_LOG,LOG_NOTICE, "JDRjr: Config checking _pumpID %s, num = %d\n", param, num);
       pump_detail *pump = getpump(aqdata, num);
       if (pump != NULL) {
+        LOG(AQUA_LOG,LOG_NOTICE, "JDRjr: Pump is not NULL\n");
         pump->pumpID = strtoul(cleanalloc(value), NULL, 16);
         if ( (int)pump->pumpID <= PENTAIR_DEC_PUMP_MAX) {
+          LOG(AQUA_LOG,LOG_NOTICE, "JDRjr: Setting PENTAIR\n");
           pump->prclType = PENTAIR;
         } else {
+          LOG(AQUA_LOG,LOG_NOTICE, "JDRjr: Setting JANDY\n");
           pump->prclType = JANDY;
           //pump->pumpType = EPUMP; // For testing let the interface set this
         }
@@ -615,6 +620,7 @@ bool setConfigValue(struct aqualinkdata *aqdata, char *param, char *value) {
       }
       rtn=true;
     } else if (strncasecmp(param + 9, "_pumpIndex", 10) == 0) { //button_01_pumpIndex=1
+      LOG(AQUA_LOG,LOG_NOTICE, "JDRjr: Config checking _pumpIndex %s, num = %d\n", param, num);
       pump_detail *pump = getpump(aqdata, num);
       if (pump != NULL) {
         pump->pumpIndex = strtoul(value, NULL, 10);
@@ -674,6 +680,13 @@ pump_detail *getpump(struct aqualinkdata *aqdata, int button)
     aqdata->pumps[aqdata->num_pumps].rpm = TEMP_UNKNOWN;
     aqdata->pumps[aqdata->num_pumps].watts = TEMP_UNKNOWN;
     aqdata->pumps[aqdata->num_pumps].gpm = TEMP_UNKNOWN;
+    aqdata->pumps[aqdata->num_pumps].psi = TEMP_UNKNOWN;
+
+    aqdata->pumps[aqdata->num_pumps].previous_rpm = TEMP_UNKNOWN;
+    aqdata->pumps[aqdata->num_pumps].watt_sum = 0;
+    aqdata->pumps[aqdata->num_pumps].gpm_sum = 0;
+    aqdata->pumps[aqdata->num_pumps].sample_count = 0;
+
     aqdata->num_pumps++;
     return &aqdata->pumps[aqdata->num_pumps-1];
   }

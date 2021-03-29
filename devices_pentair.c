@@ -42,12 +42,59 @@ bool processPentairPacket(unsigned char *packet, int packet_length, struct aqual
     for (i = 0; i < MAX_PUMPS; i++) {
       if ( aqdata->pumps[i].prclType == PENTAIR && aqdata->pumps[i].pumpID == packet[PEN_PKT_FROM] ) {
         // We found the pump.
-        LOG(DPEN_LOG, LOG_INFO, "Pentair Pump Status message = RPM %d | WATTS %d\n",
+        LOG(DPEN_LOG, LOG_INFO, "Pentair Pump Status message = RPM %d | WATTS %d (%d GPM at %d PSI) pumpType %d\n",
           (packet[PEN_HI_B_RPM] * 256) + packet[PEN_LO_B_RPM],
-          (packet[PEN_HI_B_WAT] * 256) + packet[PEN_LO_B_WAT]);
+          (packet[PEN_HI_B_WAT] * 256) + packet[PEN_LO_B_WAT],
+          packet[PEN_GPM],
+          packet[PEN_PSI],
+          aqdata->pumps[i].pumpType);
 
         aqdata->pumps[i].rpm = (packet[PEN_HI_B_RPM] * 256) + packet[PEN_LO_B_RPM];
+        aqdata->pumps[i].gpm = packet[PEN_GPM];
+        aqdata->pumps[i].psi = packet[PEN_PSI];
         aqdata->pumps[i].watts = (packet[PEN_HI_B_WAT] * 256) + packet[PEN_LO_B_WAT];
+
+
+        // FIXME: assumes rpm is the controlled value, need to allow for gpm option
+        // JDRjr
+        if(aqdata->pumps[i].rpm == aqdata->pumps[i].previous_rpm)
+        {
+            // increment
+            aqdata->pumps[i].watt_sum += aqdata->pumps[i].watts;
+            aqdata->pumps[i].gpm_sum += aqdata->pumps[i].gpm;
+            aqdata->pumps[i].sample_count++;
+
+            // info update on 5m
+            if((aqdata->pumps[i].sample_count % 30) == 0)
+            {
+                LOG(DPEN_LOG, LOG_INFO, "Pentair Pump Stat Averages: %.1f watts, %.1f gpm (%d samples)\n",
+                    (double)aqdata->pumps[i].watt_sum / (double)aqdata->pumps[i].sample_count,
+                    (double)aqdata->pumps[i].gpm_sum / (double)aqdata->pumps[i].sample_count,
+                    aqdata->pumps[i].sample_count);
+            }
+        } else {
+            // speed change, dump and reset (and skip transition for averaging)
+
+            LOG(DPEN_LOG, LOG_NOTICE, "Pentair Pump Speed Change: was %d, now %d\n",
+                aqdata->pumps[i].previous_rpm,
+                aqdata->pumps[i].rpm);
+            if(aqdata->pumps[i].sample_count > 0)
+            {
+                LOG(DPEN_LOG, LOG_NOTICE, "Pentair Pump Speed Change: average wattage: %6.1f\n",
+                    (double)aqdata->pumps[i].watt_sum / (double)aqdata->pumps[i].sample_count);
+                LOG(DPEN_LOG, LOG_NOTICE, "Pentair Pump Speed Change:     average gpm: %6.1f\n",
+                    (double)aqdata->pumps[i].gpm_sum / (double)aqdata->pumps[i].sample_count);
+            }
+            LOG(DPEN_LOG, LOG_NOTICE, "Pentair Pump Speed Change: over %d samples\n",
+                aqdata->pumps[i].sample_count);
+
+
+            // reset all the things, skipping this sample
+            aqdata->pumps[i].previous_rpm = aqdata->pumps[i].rpm;
+            aqdata->pumps[i].watt_sum = 0;
+            aqdata->pumps[i].gpm_sum = 0;
+            aqdata->pumps[i].sample_count = 0;
+        }
 
         changedAnything = true;
         break;

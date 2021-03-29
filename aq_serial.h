@@ -55,11 +55,15 @@
 #define PEN_PKT_FROM 6
 #define PEN_PKT_DEST 5
 #define PEN_PKT_CMD 7
+#define PEN_PKT_LEN 8
 
-#define PEN_HI_B_RPM 14
-#define PEN_LO_B_RPM 15
 #define PEN_HI_B_WAT 12
 #define PEN_LO_B_WAT 13
+#define PEN_HI_B_RPM 14
+#define PEN_LO_B_RPM 15
+
+#define PEN_GPM 16
+#define PEN_PSI 17
 // END Pentair
 
 #define AQ_MINPKTLEN    5
